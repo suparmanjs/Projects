@@ -18,7 +18,6 @@ SELECT
 	, total_deaths
 FROM
 	covid_19_indonesia
-
 ORDER BY
 	3,1
 
