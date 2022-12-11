@@ -1,0 +1,249 @@
+--- Welcome to Jaya Suparman portfolio project
+--- In this project we are going to do a data wrangling using the Indonesia's covid data
+
+select * from covid_19_indonesia
+order by 1,3
+
+
+--- Select the data that we are going to work with
+
+SELECT
+	date
+	, island
+	, location
+	, population
+	, new_cases
+	, new_deaths
+	, total_cases
+	, total_deaths
+FROM
+	covid_19_indonesia
+
+ORDER BY
+	3,1
+
+
+--- Select data with nasional only
+
+SELECT
+	date
+	, island
+	, location
+	, population
+	, new_cases
+	, new_deaths
+	, total_cases
+	, total_deaths
+FROM
+	covid_19_indonesia
+WHERE
+	Location='Indonesia'
+ORDER BY
+	3,1
+
+
+--- Total deaths VS. Total cases
+--- This shows the perfentage of dying if you contact covid
+
+SELECT
+	date
+	, island
+	, location
+	, population
+	, total_cases
+	, total_deaths
+	, (CAST(total_deaths AS numeric)/CAST(total_cases AS numeric))*100 AS death_percentage
+FROM
+	covid_19_indonesia
+-- WHERE
+	-- location='Indonesia'			---- National levels only
+ORDER BY 
+	3,1
+
+
+
+--- Total cases VS. Population
+--- This shows the percentageof the population that is infected 
+
+SELECT
+	date
+	, island
+	, location
+	, population
+	, total_cases
+	, Total_Deaths
+	, (CAST(total_cases AS numeric)/CAST(population AS numeric))*100 AS percent_population_infected
+FROM
+	covid_19_indonesia
+-- WHERE
+	-- location='Indonesia'			---- National levels only
+ORDER BY
+	3,1
+
+
+
+--- Province with the highest infection rate compare to the population
+
+SELECT
+	island
+	, location
+	, population
+	, MAX(CAST(total_cases AS numeric)) AS highest_infection_province
+	, MAX(CAST(total_cases AS numeric)/CAST(population AS numeric))*100 as percent_population_infected
+FROM
+	covid_19_indonesia
+WHERE
+	location not in ('indonesia')
+GROUP BY
+	location, population, island
+ORDER BY
+	percent_population_infected DESC
+
+
+
+--- Province with highest death count
+
+SELECT
+	island
+	, location
+	, population
+	, MAX(CAST(total_deaths AS int)) AS death_count_province
+FROM
+	covid_19_indonesia
+WHERE
+	location not in ('indonesia')
+GROUP BY
+	location, population, island
+ORDER BY
+	death_count_province DESC
+
+
+
+--- Total counts per months
+
+WITH covindo (date, island, location, population, new_cases, new_deaths)
+	AS
+	(
+	SELECT
+		FORMAT(CAST(date AS date), 'yyyy-MM')		-- To see data in year, use 'yyyy'
+		, island
+		, location
+		, population
+		, CAST(new_cases AS int) 
+		, CAST(new_deaths AS int) 
+	FROM
+		covid_19_indonesia
+	)
+SELECT 
+	date
+	, island
+	, location
+	, population
+	, SUM(new_cases) AS total_cases
+	, SUM(new_deaths) AS total_deaths
+FROM 
+	covindo
+GROUP BY
+	date, island, location, population
+ORDER BY
+	1,3
+
+
+
+	--- NEXT, The tableau data visualization
+
+	--- Total count of covid in Indonesia
+
+SELECT
+	location
+	, population
+	, SUM(CAST(new_cases AS numeric)) AS total_cases
+	, SUM(CAST(new_deaths AS numeric)) AS total_deaths
+	, SUM(CAST(new_deaths AS numeric))/(NULLIF(SUM(CAST(new_cases AS int)),0))*100 AS death_percentage
+	, (SUM(CAST(new_cases AS numeric))/CAST(population AS int))*100 AS Percent_population_infected
+FROM
+	covid_19_indonesia
+WHERE 
+	location='Indonesia'
+GROUP BY
+	location,population
+
+
+
+	---Total count of covid by provice
+SELECT
+	Location
+	, population
+	, SUM(CAST(new_cases AS numeric)) AS total_cases
+	, SUM(CAST(new_deaths AS numeric)) AS total_deaths
+FROM
+	covid_19_indonesia
+WHERE 
+	location not in ('Indonesia')
+GROUP BY
+	location,population
+
+
+	
+	--- Total count by Island
+SELECT 
+	Island
+	, SUM(distinct(CAST(population AS numeric))) AS island_population
+	, SUM(CAST(new_cases AS numeric)) AS island_cases
+	, SUM(CAST(new_deaths AS numeric)) AS island_deaths
+	, SUM(CAST(new_deaths AS numeric))/SUM(CAST(new_cases AS numeric))*100 AS death_persentage
+	, SUM(CAST(new_cases AS numeric))/SUM(distinct(CAST(population AS numeric)))*100 AS percent_population_infected
+FROM 
+	covid_19_indonesia
+WHERE
+	location not in ('indonesia')
+GROUP BY 
+	island
+ORDER BY
+	1
+
+
+
+	--- Case by year
+
+SELECT
+	inacov.years
+	, ina19.location
+	, ina19.population
+	, SUM(CAST(ina19.new_cases AS int)) AS total_cases
+	, SUM(CAST(ina19.new_deaths AS int)) AS total_deaths
+FROM
+	covid_19_indonesia ina19
+LEFT JOIN
+	(
+SELECT
+	FORMAT(CAST(date AS date), 'yyyy') as years
+	, location
+	, population
+	, new_cases
+	, new_deaths
+FROM
+	covid_19_indonesia
+	) as inacov
+	ON
+	ina19.new_cases=inacov.New_Cases and ina19.New_Deaths=inacov.New_Deaths
+GROUP BY
+	inacov.years, ina19.location , ina19.population
+	
+
+
+	--- Total cases VS. population
+	--- Shows persentage of the population infected
+SELECT
+	date
+	, location
+	, population
+	, MAX(total_cases) AS highest_infection
+	, MAX(CAST(total_cases AS numeric)/CAST(population AS numeric)*100) AS percent_population_infected
+FROM
+	covid_19_indonesia
+GROUP BY
+	location,population,date
+ORDER BY
+	percent_population_infected DESC
+
