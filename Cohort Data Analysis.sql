@@ -1,3 +1,6 @@
+-- Welcome to my another data exploration with SSMS
+-- This is an analysis using COHORT analysis
+
 
 -- Cleaning Data
 -- Total Data Rows 541909
